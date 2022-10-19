@@ -1,8 +1,9 @@
 from tkinter import *
 from tkinter import filedialog, messagebox
-from PIL import ImageTk, Image
+from PIL import ImageTk, Image, ImageOps
 import cv2
-
+from collections import Counter
+from sklearn.cluster import KMeans
 
 # ------------ GUI ------------- #
 window = Tk()
@@ -10,47 +11,103 @@ window.title('COL\'R || CREAT\'R')
 window.geometry('800x800')
 
 # ------------Background------------- #
-canvas = Canvas(height=800, width=800, bg='black', highlightthickness=0)
-# background = Image.open('')
-# background_sm = background.resize((740, 675), Image.ANTIALIAS)
-# watermarker_app = ImageTk.PhotoImage(background_sm)
-# canvas.create_image(280, 310, image=watermarker_app)
+canvas = Canvas(height=2000, width=2000, bg='#000000', highlightthickness=0)
 canvas.place(x=0, y=0)
-frame = Frame(window, width=400, height=400)
-frame.place(anchor='center', relx=0.5, rely=0.5)
-img = ImageTk.PhotoImage(Image.open('/Users/dangalansky/Documents/Headshots/linked_in_profile_pic.png'))
-label = Label(frame, image=img)
-label.pack()
 
+# ------------Image Uploaded---------- #
+picture_frame = Frame(window, height=400, width=400)
+picture_frame.place(x=200, y=100)
+img = ImageTk.PhotoImage(Image.open('1.jpg'))
+photo = Label(picture_frame, image=img, anchor='center', bg="#000000")
+photo.pack()
 
-
-
+# ------------Hex Palette---------- #
+hexframe = Frame(window, height=150, width=700, bg='#000000')
+hex0 = Frame(hexframe, height=100, width=100, bg='#FFFFFF')
+hex0_txt = Label(hexframe, text="#FFFFFF", font=("Arial", 10), anchor='center', bg="#000000", fg="#FFFFFF")
+hex1 = Frame(hexframe, height=100, width=100, bg='#FFFFFF')
+hex1_txt = Label(hexframe, text="#FFFFFF", font=("Arial", 10), anchor='center', bg="#000000", fg="#FFFFFF")
+hex2 = Frame(hexframe, height=100, width=100, bg='#FFFFFF')
+hex2_txt = Label(hexframe, text="#FFFFFF", font=("Arial", 10), anchor='center', bg="#000000", fg="#FFFFFF")
+hex3 = Frame(hexframe, height=100, width=100, bg='#FFFFFF')
+hex3_txt = Label(hexframe, text="#FFFFFF", font=("Arial", 10), anchor='center', bg="#000000", fg="#FFFFFF")
+hex4 = Frame(hexframe, height=100, width=100, bg='#FFFFFF')
+hex4_txt = Label(hexframe, text="#FFFFFF", font=("Arial", 10), anchor='center', bg="#000000", fg="#FFFFFF")
+hexframe.place(x=120, y=560)
+hex0.grid(row=0, column=0, padx=5)
+hex0_txt.grid(row=1, column=0, pady=1)
+hex1.grid(row=0, column=1, padx=5)
+hex1_txt.grid(row=1, column=1, pady=1)
+hex2.grid(row=0, column=2, padx=5)
+hex2_txt.grid(row=1, column=2, pady=1)
+hex3.grid(row=0, column=3, padx=5)
+hex3_txt.grid(row=1, column=3, pady=1)
+hex4.grid(row=0, column=4, padx=5)
+hex4_txt.grid(row=1, column=4, pady=1)
 
 
 # ----------- Functions ------------ #
-# def open_photo():
-#     global label
-#     # filename = filedialog.askopenfilename(initialdir='/', title='Choose A File',
-#     #                                       filetypes=(('png files', '*.png'), ('jpg files', '*.jpg')))
-#
-#     img = Image.open(f"'{filename}'")
-#     re_img = img.resize((400,400))
-#     img = ImageTk.PhotoImage(re_img)
-#     label.config(image=img)
+def open_photo():
+    global photo
+    filename = filedialog.askopenfilename(initialdir='/', title='Choose A File',
+                                          filetypes=(('png files', '*.png'), ('jpg files', '*.jpg')))
+    image_filepath.set(filename)
+    image = Image.open(filename)
+    if image.size[0] > 400 or image.size[1] > 400:
+        image = ImageOps.pad(image, (400, 400), centering=(0.5, 0.5))
+    image = ImageTk.PhotoImage(image)
+    photo.configure(image=image)
+    photo.image = image
 
 
+def cv_photo(img_path):
+    if img_path == '':
+        messagebox.showinfo(title='Error!', message='Please select Image!')
+    else:
+        image = cv2.imread(img_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        prep_image(image)
 
 
-# photo = StringVar(None)
-# photo_entry = Entry(window, textvariable=photo, width=30, highlightthickness=0)
-# photo_entry.place(x=170, y=490)
-# open_photo = Button(window, text='Select', borderwidth=0, highlightbackground='#000000',
-#                     command=open_photo).place(x=275, y=515)
+# taken from Behic Guven
+def prep_image(raw_img):
+    modified_img = cv2.resize(raw_img, (900, 600), interpolation=cv2.INTER_AREA)
+    modified_img = modified_img.reshape(modified_img.shape[0] * modified_img.shape[1], 3)
+    color_analysis(modified_img)
 
 
+# taken from Behic Guven
+def color_analysis(img):
+    clf = KMeans(n_clusters=5)
+    color_labels = clf.fit_predict(img)
+    center_colors = clf.cluster_centers_
+    counts = Counter(color_labels)
+    ordered_colors = [center_colors[i] for i in counts.keys()]
+    hex_colors = [rgb_to_hex(ordered_colors[i]) for i in counts.keys()]
+    hex_list = [hex0, hex1, hex2, hex3, hex4]
+    hex_txt_list = [hex0_txt, hex1_txt, hex2_txt, hex3_txt, hex4_txt]
+    for color in hex_colors:
+        n = hex_colors.index(color)
+        txt_edit = hex_txt_list[n]
+        txt_edit.config(text=color)
+        hex_edit = hex_list[n]
+        hex_edit.config(bg=color)
 
 
+def rgb_to_hex(rgb_color):
+    hex_color = "#"
+    for i in rgb_color:
+        i = int(i)
+        hex_color += ("{:02x}".format(i))
+    return hex_color
 
 
+open_photo = Button(window, text='Choose File', borderwidth=0, highlightbackground='#000000',
+                    command=open_photo).place(x=50, y=515)
+
+image_filepath = StringVar(None)
+
+select_photo = Button(window, text='Create Palette', borderwidth=0, highlightbackground='#000000',
+                      command=lambda: cv_photo(image_filepath.get())).place(x=650, y=515)
 
 window.mainloop()
