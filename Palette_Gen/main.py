@@ -4,6 +4,7 @@ from PIL import ImageTk, Image, ImageOps
 import cv2
 from collections import Counter
 from sklearn.cluster import KMeans
+import pyperclip as pc
 
 # ------------ GUI ------------- #
 window = Tk()
@@ -11,29 +12,37 @@ window.title('COL\'R || CREAT\'R')
 window.geometry('800x800')
 
 # ------------Background------------- #
-canvas = Canvas(height=2000, width=2000, bg='#000000', highlightthickness=0)
+canvas = Canvas(height=2000, width=2000, bg='#55c3f7', highlightthickness=0)
+background = Image.open('bg.jpg')
+bg = ImageTk.PhotoImage(background)
+canvas.create_image(400, 390, image=bg)
 canvas.place(x=0, y=0)
 
 # ------------Image Uploaded---------- #
 picture_frame = Frame(window, height=400, width=400)
-picture_frame.place(x=200, y=100)
+picture_frame.place(x=200, y=180)
 img = ImageTk.PhotoImage(Image.open('1.jpg'))
-photo = Label(picture_frame, image=img, anchor='center', bg="#000000")
+photo = Label(picture_frame, image=img, anchor='center')
 photo.pack()
 
 # ------------Hex Palette---------- #
-hexframe = Frame(window, height=150, width=700, bg='#000000')
+hexframe = Frame(window, height=150, width=700, bg='#55c3f7')
 hex0 = Frame(hexframe, height=100, width=100, bg='#FFFFFF')
-hex0_txt = Label(hexframe, text="#FFFFFF", font=("Arial", 10), anchor='center', bg="#000000", fg="#FFFFFF")
+hex0_txt = Button(hexframe, text="#FFFFFF", font=("Arial", 10), anchor='center', bg="#55c3f7", fg="#000000",
+                  highlightbackground='#55c3f7', command=lambda: txt_print(hex0_txt.cget('text')))
 hex1 = Frame(hexframe, height=100, width=100, bg='#FFFFFF')
-hex1_txt = Label(hexframe, text="#FFFFFF", font=("Arial", 10), anchor='center', bg="#000000", fg="#FFFFFF")
+hex1_txt = Button(hexframe, text="#FFFFFF", font=("Arial", 10), anchor='center', bg="#55c3f7", fg="#000000",
+                  highlightbackground='#55c3f7', command=lambda: txt_print(hex1_txt.cget('text')))
 hex2 = Frame(hexframe, height=100, width=100, bg='#FFFFFF')
-hex2_txt = Label(hexframe, text="#FFFFFF", font=("Arial", 10), anchor='center', bg="#000000", fg="#FFFFFF")
+hex2_txt = Button(hexframe, text="#FFFFFF", font=("Arial", 10), anchor='center', bg="#55c3f7", fg="#000000",
+                  highlightbackground='#55c3f7', command=lambda: txt_print(hex2_txt.cget('text')))
 hex3 = Frame(hexframe, height=100, width=100, bg='#FFFFFF')
-hex3_txt = Label(hexframe, text="#FFFFFF", font=("Arial", 10), anchor='center', bg="#000000", fg="#FFFFFF")
+hex3_txt = Button(hexframe, text="#FFFFFF", font=("Arial", 10), anchor='center', bg="#55c3f7", fg="#000000",
+                  highlightbackground='#55c3f7', command=lambda: txt_print(hex3_txt.cget('text')))
 hex4 = Frame(hexframe, height=100, width=100, bg='#FFFFFF')
-hex4_txt = Label(hexframe, text="#FFFFFF", font=("Arial", 10), anchor='center', bg="#000000", fg="#FFFFFF")
-hexframe.place(x=120, y=560)
+hex4_txt = Button(hexframe, text="#FFFFFF", font=("Arial", 10), anchor='center', bg="#55c3f7", fg="#000000",
+                  highlightbackground='#55c3f7', command=lambda: txt_print(hex4_txt.cget('text')))
+hexframe.place(x=120, y=625)
 hex0.grid(row=0, column=0, padx=5)
 hex0_txt.grid(row=1, column=0, pady=1)
 hex1.grid(row=0, column=1, padx=5)
@@ -54,7 +63,7 @@ def open_photo():
     image_filepath.set(filename)
     image = Image.open(filename)
     if image.size[0] > 400 or image.size[1] > 400:
-        image = ImageOps.pad(image, (400, 400), centering=(0.5, 0.5))
+        image = ImageOps.pad(image, (400, 400), centering=(0.5, 0.5), color="#55c3f7")
     image = ImageTk.PhotoImage(image)
     photo.configure(image=image)
     photo.image = image
@@ -102,12 +111,22 @@ def rgb_to_hex(rgb_color):
     return hex_color
 
 
-open_photo = Button(window, text='Choose File', borderwidth=0, highlightbackground='#000000',
-                    command=open_photo).place(x=50, y=515)
+def txt_print(text):
+    pc.copy(text)
+    messagebox.showinfo(title='Success!', message='Hexadecimal code copied to clipboard!')
 
+
+# ----------- Buttons/Mainloop ------------ #
+
+# Choose Photo Button
+Button(window, text='Choose Photo', borderwidth=0, highlightbackground='#55c3f7',
+       command=open_photo).place(x=50, y=515)
+
+# Store Filepath in StringVar
 image_filepath = StringVar(None)
 
-select_photo = Button(window, text='Create Palette', borderwidth=0, highlightbackground='#000000',
-                      command=lambda: cv_photo(image_filepath.get())).place(x=650, y=515)
+# Create Palette Button
+Button(window, text='Create Palette', borderwidth=2, highlightbackground='#55c3f7',
+       command=lambda: cv_photo(image_filepath.get())).place(x=635, y=515)
 
 window.mainloop()
